@@ -142,10 +142,10 @@ if __name__ == "__main__":
 	if args.example:
 		seq = 'TAGAGATAGAATGGGTCCAGAGTTTTGTAATTTCCATGGGTCCAGAGTTTTGTAATTTATTATATAGAGATAGAATGGGTCCAGAGTTTTGTAATTTCCATGGGTCCAGAGTTTTGTAATTTAT'
 	if args.file:
-		with open(args.file) as tf:
+		with open(args.file[0]) as tf:
 			seq = tf.readlines()[0].strip()
 	if args.input:
-		seq = args.input
+		seq = args.input[0]
 	if args.verbose:
 		print('Sekwencja:')
 		print(seq)

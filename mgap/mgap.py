@@ -71,8 +71,7 @@ if __name__ == '__main__':
         help='Specify filename with input'
     )
     parser.add_argument(
-        '-input'
-        '-nr', '--no_recov',
+        '-input',
         dest='input',
         default=None,
         type=str,
@@ -96,7 +95,7 @@ if __name__ == '__main__':
         seqa = 'AACGTA'
         seqb = 'ACACCTA'
     if args.file:
-        seqa, seqb = parse_input(args.file)
+        seqa, seqb = parse_input(args.file[0])
     if args.input:
         seqa, seqb = args.input
     score, score_matrix, path_matrix = maximal_gap(seqa, seqb, -1)

@@ -117,7 +117,7 @@ if __name__ == '__main__':
         seqa = 'CAGCACTTGGATTCTCGG'
         seqb = 'CAGCGTGG'
     if args.file:
-        seqa, seqb = parse_input(args.file)
+        seqa, seqb = parse_input(args.file[0])
     if args.input:
         seqa, seqb = args.input
     score_matrix, path_matrix, row, col, max_score = semiglobal_align(seqa, seqb, -1)
