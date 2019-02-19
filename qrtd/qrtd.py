@@ -1,4 +1,5 @@
 import numpy as np
+from newick import loads
 
 def k_subsets_i(n, k):
 	if k == 0 or n < k:
@@ -39,98 +40,139 @@ class Tree:
 		self.parse_newick(newick)
 		# self.parents = np.unique([node.no for node in self.tree])
 		self.ntaxa.sort()
+		# print('<<< Print Tree')
+		# for key, node in self.tree.items():
+		# 	print('node : {}'.format(key))
+		# 	try:
+		# 		print('parent: {}'.format(node.parent.no))
+		# 	except AttributeError:
+		# 		print('parent: None')
+		# 	t = [x.no for x in node.children if x]
+		# 	print('children: {}'.format(t))
+		# 	try:
+		# 		t = self.labels[node.no]
+		# 	except KeyError:
+		# 		t = 'None'
+		# 	print('Label: {}'.format(t))
+		# print('>>> End Tree')
+
+	def create_tree(self, node, p_id):
+		for child in node.descendants:
+			if not child.descendants:
+				tmp = len(self.tree)
+				self.tree[tmp] = Node(tmp, self.tree[p_id])
+				self.tree[p_id].add_child(self.tree[tmp])
+				self.label_type[child.name] = tmp
+				self.labels[tmp] = child.name
+				self.ntaxa.append(child.name)
+			else:
+				tmp = len(self.tree)
+				self.tree[tmp] = Node(tmp, self.tree[p_id])
+				self.tree[p_id].add_child(self.tree[tmp])
+				self.create_tree(child, tmp)
+
+
 
 	def parse_newick(self, newick):
-		index = 0
 
-		symbols = ['(', ')', ':', ';', ',']
-
+		tree = loads(newick)
 		self.tree = {}
-		self.tree[0] = Node(0, None) # artificial root
-		self.labels = {}
-		self.weights = {}
 		self.label_type = {}
+		self.labels = {}
 		self.ntaxa = []
-		parent = -1
-		current = 0
-		save = 0
-		prev_symbol = None
-		while index < len(newick):
-			if newick[index] == '(':
-				# new node
-				parent = current
-				current = len(self.tree)
-				self.tree[current] =  Node(current, self.tree[parent])
-				self.tree[parent].add_child(self.tree[current])
-				prev_symbol = '('
-				index += 1
-				continue
-				# done open
-			elif newick[index] == ')':
-				if prev_symbol == ',':
-					temp = len(self.tree)
-					self.tree[temp] = Node(temp, self.tree[current])
-					self.tree[current].add_child(self.tree[temp])
-					temp = None
-				save = current
-				current = parent
-				parent = self.tree[current].parent.no
-				index += 1
-				prev_symbol = ')'
-				continue
-				# done close
-			elif newick[index] == ':':
-				if prev_symbol in ['(', ',']:
-					temp = len(self.tree)
-					self.tree[temp] = Node(temp, self.tree[current])
-					self.tree[current].add_child(self.tree[temp])
-					temp = None
-				index += 1
-				prev_symbol = ':'
-				continue
-			elif newick[index] == ';':
-				index = len(newick)
-				break
-				# done - break
-			elif newick[index] == ',':
-				if prev_symbol == ',':
-					temp = len(self.tree)
-					self.tree[temp] = Node(temp, self.tree[current])
-					temp = None
-				index += 1
-				prev_symbol = ','
-				# done comma
-				continue
-			else:
-				taxa = ''
-				while index < len(newick) and newick[index] not in symbols:
-					taxa += newick[index]
-					index += 1
-				if prev_symbol == ')':
-					self.labels[taxa] = save
-					self.label_type[save] = taxa
-				elif prev_symbol == ':':
-					self.weights[save] = int(taxa)
-				else:
-					temp = len(self.tree)
-					self.labels[taxa] = temp
-					self.label_type[temp] = taxa
-					self.tree[temp] = Node(temp, self.tree[current])
-					self.tree[current].add_child(self.tree[temp])
-					save = temp
-					self.ntaxa.append(taxa)
-					temp = None
-				index += 1
-				prev_symbol = 'L'
-				continue
-				# done label
+		self.tree[0] = Node(0, None)
+		self.create_tree(tree[0], 0)
+
+		# index = 0
+
+		# symbols = ['(', ')', ':', ';', ',']
+
+		# self.tree = {}
+		# self.tree[0] = Node(0, None) # artificial root
+		# self.labels = {}
+		# self.weights = {}
+		# self.label_type = {}
+		# self.ntaxa = []
+		# parent = -1
+		# current = 0
+		# save = 0
+		# prev_symbol = None
+		# while index < len(newick):
+		# 	if newick[index] == '(':
+		# 		# new node
+		# 		parent = current
+		# 		current = len(self.tree)
+		# 		self.tree[current] =  Node(current, self.tree[parent])
+		# 		self.tree[parent].add_child(self.tree[current])
+		# 		prev_symbol = '('
+		# 		index += 1
+		# 		continue
+		# 		# done open
+		# 	elif newick[index] == ')':
+		# 		if prev_symbol == ',':
+		# 			temp = len(self.tree)
+		# 			self.tree[temp] = Node(temp, self.tree[current])
+		# 			self.tree[current].add_child(self.tree[temp])
+		# 			temp = None
+		# 		save = current
+		# 		current = parent
+		# 		parent = self.tree[current].parent.no
+		# 		index += 1
+		# 		prev_symbol = ')'
+		# 		continue
+		# 		# done close
+		# 	elif newick[index] == ':':
+		# 		if prev_symbol in ['(', ',']:
+		# 			temp = len(self.tree)
+		# 			self.tree[temp] = Node(temp, self.tree[current])
+		# 			self.tree[current].add_child(self.tree[temp])
+		# 			temp = None
+		# 		index += 1
+		# 		prev_symbol = ':'
+		# 		continue
+		# 	elif newick[index] == ';':
+		# 		index = len(newick)
+		# 		break
+		# 		# done - break
+		# 	elif newick[index] == ',':
+		# 		if prev_symbol == ',':
+		# 			temp = len(self.tree)
+		# 			self.tree[temp] = Node(temp, self.tree[current])
+		# 			temp = None
+		# 		index += 1
+		# 		prev_symbol = ','
+		# 		# done comma
+		# 		continue
+		# 	else:
+		# 		taxa = ''
+		# 		while index < len(newick) and newick[index] not in symbols:
+		# 			taxa += newick[index]
+		# 			index += 1
+		# 		if prev_symbol == ')':
+		# 			self.labels[taxa] = save
+		# 			self.label_type[save] = taxa
+		# 		elif prev_symbol == ':':
+		# 			self.weights[save] = int(taxa)
+		# 		else:
+		# 			temp = len(self.tree)
+		# 			self.labels[taxa] = temp
+		# 			self.label_type[temp] = taxa
+		# 			self.tree[temp] = Node(temp, self.tree[current])
+		# 			self.tree[current].add_child(self.tree[temp])
+		# 			save = temp
+		# 			self.ntaxa.append(taxa)
+		# 			temp = None
+		# 		index += 1
+		# 		prev_symbol = 'L'
+		# 		continue
+		# 		# done label
 
 	def path_to_root(self, taxa):
 		tree=self.tree
-		start_node=self.labels[taxa]
+		start_node=self.label_type[taxa]
 		path = [tree[start_node].no]
 		parent = tree[start_node].parent.no
-		while parent:
+		while parent != 0:
 			path.append(parent)
 			parent = tree[parent].parent.no
 		path.append(parent)
@@ -195,6 +237,8 @@ def find_center_from_three_paths(t, path1, path2, path3):
 		else:
 			prevC = node
 
+	# print('prevA: {}, prevB: {}, prevC: {}'.format(prevA, prevB, prevC))
+
 	return center, prevA, prevB, prevC
 
 
@@ -205,12 +249,21 @@ def find_center(tree, a,b,c):
 	center, prevA, prevB, prevC = find_center_from_three_paths(tree, pathAB, pathBC, pathCA)
 
 	parent = None
-	if prevA == tree.tree[center].parent.no:
-		parent = 0
-	elif prevB == tree.tree[center].parent.no:
-		parent = 1
-	elif prevC == tree.tree[center].parent.no:
-		parent = 2
+	try:
+		if prevA == tree.tree[center].parent.no:
+			parent = 0
+	except AttributeError:
+		pass
+	try:
+		if prevB == tree.tree[center].parent.no:
+			parent = 1
+	except AttributeError:
+		pass
+	try:
+		if prevC == tree.tree[center].parent.no:
+			parent = 2
+	except AttributeError:
+		pass
 	return center, prevA, prevB, prevC, parent
 
 def get_leaves(tree, forbidden, start_node, center):
@@ -233,19 +286,22 @@ def get_leaves(tree, forbidden, start_node, center):
 def get_leaves_from_subtree(tree, forbidden, start_node, from_child=False):
 	if not from_child:
 		leaves = []
-		tnodes = tree.tree[start_node].children + [tree.tree[start_node].parent]
-		nodes = [node.no for node in tnodes]
-		for node in nodes:
-			if node != forbidden:
-				rec = get_leaves(tree, start_node, node, forbidden)
-				if rec:
-					try:
-						leaves.extend(rec)
-					except TypeError:
-						leaves.append(rec)
-			else:
-				continue
-		return leaves
+		if tree.tree[start_node].children:
+			tnodes = tree.tree[start_node].children + [tree.tree[start_node].parent]
+			nodes = [node.no for node in tnodes]
+			for node in nodes:
+				if node != forbidden:
+					rec = get_leaves(tree, forbidden, node, forbidden)
+					if rec:
+						try:
+							leaves.extend(rec)
+						except TypeError:
+							leaves.append(rec)
+				else:
+					continue
+			return leaves
+		else:
+			return [tree.tree[start_node].no]
 	else:
 		leaves = []
 		root = tree.tree[0].no
@@ -255,12 +311,21 @@ def get_leaves_from_subtree(tree, forbidden, start_node, from_child=False):
 			if node != forbidden:
 				rec = get_leaves(tree, forbidden, node, forbidden)
 				if rec:
-					leaves.extend(rec)
+					try:
+						leaves.extend(rec)
+					except TypeError:
+						leaves.append(rec)
 			else:
 				continue
 		return leaves
 
 def count_diff_topologies(tree_a, tree_b, labels, a,b,c):
+
+	# print()
+	# print()
+	# print('Start counting diff')
+	# print('Chosen leaves')
+	# print(a,b,c)
 
 	nleaves = len(labels)
 	label_dict = {}
@@ -277,6 +342,12 @@ def count_diff_topologies(tree_a, tree_b, labels, a,b,c):
 	leaves_a_subtree_a = get_leaves_from_subtree(tree_a, center_a[0], prev_nodes_a[0], from_child=prev_parent_a==0)
 	leaves_a_subtree_b = get_leaves_from_subtree(tree_a, center_a[0], prev_nodes_a[1], from_child=prev_parent_a==1)
 	leaves_a_subtree_c = get_leaves_from_subtree(tree_a, center_a[0], prev_nodes_a[2], from_child=prev_parent_a==2)
+	# print('a subtree_a')
+	# print(leaves_a_subtree_a)
+	# print('a subtree_b')
+	# print(leaves_a_subtree_b)
+	# print('a subtree_c')
+	# print(leaves_a_subtree_c)
 
 	prev_nodes_b = center_b[1:4]
 	prev_parent_b = center_b[4]
@@ -285,41 +356,54 @@ def count_diff_topologies(tree_a, tree_b, labels, a,b,c):
 	leaves_b_subtree_b = get_leaves_from_subtree(tree_b, center_b[0], prev_nodes_b[1], from_child=prev_parent_b==1)
 	leaves_b_subtree_c = get_leaves_from_subtree(tree_b, center_b[0], prev_nodes_b[2], from_child=prev_parent_b==2)
 
+	# print('b subtree_a')
+	# print(leaves_b_subtree_a)
+	# print('b subtree_b')
+	# print(leaves_b_subtree_b)
+	# print('b subtree_c')
+	# print(leaves_b_subtree_c)
+
 	topology_a = [3] * nleaves
 	topology_b = [3] * nleaves
 
 	for x in leaves_a_subtree_a:
-		t_taxa = tree_a.label_type[x]
+		t_taxa = tree_a.labels[x]
 		t_key = label_dict[t_taxa]
 		topology_a[t_key] = 0
 	for x in leaves_a_subtree_b:
-		t_taxa = tree_a.label_type[x]
+		t_taxa = tree_a.labels[x]
 		t_key = label_dict[t_taxa]
 		topology_a[t_key] = 1
 	for x in leaves_a_subtree_c:
-		t_taxa = tree_a.label_type[x]
+		t_taxa = tree_a.labels[x]
 		t_key = label_dict[t_taxa]
 		topology_a[t_key] = 2
 
 	# print(leaves_b_subtree_c)
 
 	for x in leaves_b_subtree_a:
-		t_taxa = tree_b.label_type[x]
+		t_taxa = tree_b.labels[x]
 		t_key = label_dict[t_taxa]
 		topology_b[t_key] = 0
 	for x in leaves_b_subtree_b:
-		t_taxa = tree_b.label_type[x]
+		t_taxa = tree_b.labels[x]
 		t_key = label_dict[t_taxa]
 		topology_b[t_key] = 1
 	for x in leaves_b_subtree_c:
-		t_taxa = tree_b.label_type[x]
+		t_taxa = tree_b.labels[x]
 		t_key = label_dict[t_taxa]
 		topology_b[t_key] = 2
 
 	diff = 0
 	for i in range(nleaves):
+		# print('topology a : topology b')
+		# print('{} : {}'.format(topology_a[i], topology_b[i]))
 		if topology_a[i] != topology_b[i]:
 			diff += 1
+
+	# print('Stop counting diff')
+	# print()
+	# print()
 	return diff
 
 def qrtd(taxa, a, b):
@@ -334,13 +418,22 @@ def qrtd(taxa, a, b):
 	for triplet in triplets:
 		taxa_triplet = labels[triplet[0]], labels[triplet[1]], labels[triplet[2]]
 		diff += count_diff_topologies(tree_a, tree_b, labels, *taxa_triplet)
-	return diff / 4
+	return int(diff / 4)
 
 if __name__ == '__main__':
 	taxa = 'A B C D E'
-	# taxa = '0 1 2 3 Y X'
 	a = '(A,C,((B,D),E));'
 	b = '(C,(B,D),(A,E));'
-	# a = '(0,1,(2,3)Y)X;'
-	# b = '(0,2,(1,3)Y)X;'
+	# a = '(A,B,(C,D),E);'
+	# b = '(A,C,(B,D),E);'
+
+	# file = 'input.txt'
+	# with open(file) as tf:
+	# 	t_input = tf.readlines()
+	# 	taxa = t_input[0].strip()
+	# 	a = t_input[1].strip()
+	# 	b = t_input[2].strip()
+	# print(taxa)
+	# print(a)
+	# print(b)
 	print(qrtd(taxa, a, b))	
