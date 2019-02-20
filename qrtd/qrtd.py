@@ -421,19 +421,19 @@ def qrtd(taxa, a, b):
 	return int(diff / 4)
 
 if __name__ == '__main__':
-	taxa = 'A B C D E'
-	a = '(A,C,((B,D),E));'
-	b = '(C,(B,D),(A,E));'
+	# taxa = 'A B C D E'
+	# a = '(A,C,((B,D),E));'
+	# b = '(C,(B,D),(A,E));'
 	# a = '(A,B,(C,D),E);'
 	# b = '(A,C,(B,D),E);'
 
-	# file = 'input.txt'
-	# with open(file) as tf:
-	# 	t_input = tf.readlines()
-	# 	taxa = t_input[0].strip()
-	# 	a = t_input[1].strip()
-	# 	b = t_input[2].strip()
-	# print(taxa)
-	# print(a)
-	# print(b)
+	file = 'input.txt'
+	with open(file) as tf:
+		t_input = tf.readlines()
+		taxa = t_input[0].strip()
+		a = t_input[1].strip()
+		b = t_input[2].strip()
+	print(taxa)
+	print(a)
+	print(b)
 	print(qrtd(taxa, a, b))	
